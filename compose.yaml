@@ -1,0 +1,34 @@
+services:
+  catalogweb: 
+    build:
+      context: catalog
+      target: builder
+    ports: 
+      - '8003:8003'
+    networks:
+      - my_network
+  orderweb: 
+    build:
+      context: order
+      target: builder
+    ports: 
+      - '8001:8001'
+    depends_on:
+      - catalogweb
+    networks:
+      - my_network
+  feweb: 
+    build:
+      context: FE
+      target: builder
+    ports: 
+      - '8002:8002'
+    depends_on:
+      - catalogweb
+      - orderweb
+    networks:
+      - my_network
+
+networks:
+  my_network:
+    driver: bridge
