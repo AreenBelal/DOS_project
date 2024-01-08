@@ -85,7 +85,6 @@ DATABASES = {
         'ENGINE': 'django.db.backends.sqlite3',
         'NAME': BASE_DIR.parent.parent / '../catalog2' / 'db.sqlite3',
     }
-
 }
 
 ALLOWED_HOSTS = ['*']

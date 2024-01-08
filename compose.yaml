@@ -28,6 +28,24 @@ services:
       - orderweb
     networks:
       - my_network
+  catalogweb2: 
+    build:
+      context: catalog_2
+      target: builder
+    ports: 
+      - '8004:8004'
+    networks:
+      - my_network
+  orderweb2: 
+    build:
+      context: order_2
+      target: builder
+    ports: 
+      - '8005:8005'
+    depends_on:
+      - catalogweb2
+    networks:
+      - my_network
 
 networks:
   my_network:
