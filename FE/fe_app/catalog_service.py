@@ -2,36 +2,63 @@ import json
 
 import requests
 
-from fe_app.constants import Services
+from fe_app.cache_service import CacheService
+
+
+class ServerPicker:
+    servers = []
+
+    def pick_server(self):
+        server = self.servers[0]
+        self.servers.reverse()
+        return server
+
+
+class CatalogServicePicker(ServerPicker):
+    servers = ["http://catalogweb:8003", "http://catalogweb2:8004"]
+
+
+class OrderServicePicker(ServerPicker):
+    servers = ["http://orderweb:8001", "http://orderweb2:8005"]
 
 
 class CatalogService:
-    @staticmethod
-    def get_books():
-        api = Services.CATALOG_SERVICE + "/books/"
-        response = requests.get(api)
-        return CatalogService.handle_response(response)
+    def __init__(self):
+        self.cache_service = CacheService()
+    def get_books(self):
+        api = CatalogServicePicker().pick_server() + "/books/"
+        if not self.cache_service.get_cache(api):
+            response = requests.get(api)
+            response_content = self.handle_response(response)
+            self.cache_service.set_cache(api, response_content)
+            return response_content
+        return self.cache_service.get_cache(api)
 
-    @staticmethod
-    def get_book_by_id(pk):
-        api = Services.CATALOG_SERVICE + f"/books/{pk}"
-        response = requests.get(api)
-        return CatalogService.handle_response(response)
+    def get_book_by_id(self, pk):
+        api = CatalogServicePicker().pick_server() + f"/books/{pk}"
+        if not self.cache_service.get_cache(api):
+            response = requests.get(api)
+            response_content = self.handle_response(response)
+            self.cache_service.set_cache(api, response_content)
+            return response_content
+        return self.cache_service.get_cache(api)
 
-    @staticmethod
-    def search_books(term):
-        api = Services.CATALOG_SERVICE + f"/search/{term}"
-        response = requests.get(api)
-        return CatalogService.handle_response(response)
+    def search_books(self, term):
+        api = CatalogServicePicker().pick_server() + f"/search/{term}"
+        if not self.cache_service.get_cache(api):
+            response = requests.get(api)
+            response_content = self.handle_response(response)
+            self.cache_service.set_cache(api, response_content)
+            return response_content
+        return self.cache_service.get_cache(api)
 
-    @staticmethod
-    def purchase(item_id, item_number):
-        api = Services.ORDER_SERVICE + f"/purchase/{item_id}/"
+    def purchase(self, item_id, item_number):
+        api = OrderServicePicker().pick_server() + f"/purchase/{item_id}/"
         response = requests.put(api, data={'item_number': item_number})
-        return CatalogService.handle_response(response)
+        self.cache_service.clear_cache()
+        return self.handle_response(response)
 
-    @staticmethod
-    def handle_response(response):
+    def handle_response(self, response):
         if response.status_code == 200:
             return json.loads(response.text)
         else:
